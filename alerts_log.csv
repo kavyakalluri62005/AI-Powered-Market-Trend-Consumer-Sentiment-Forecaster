@@ -1,0 +1,2 @@
+type,message,severity,action
+SENTIMENT DROP 2005 to 2006,Sentiment dropped by 0.238 from 2005 to 2006,MEDIUM,Investigate events in 2006 that caused dissatisfaction

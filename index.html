@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SentimentAI — Dashboard</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080f0a; --bg2:#0d1710; --bg3:#111e13;
+  --card:#0f1a10; --card2:#142016;
+  --border:#1e3320; --border2:#2a4a2e;
+  --green:#22c55e; --green2:#16a34a; --green3:#4ade80; --green4:#86efac;
+  --text:#e2f5e6; --text2:#9ab8a0; --text3:#5a7a60;
+  --red:#ef4444; --amber:#f59e0b; --blue:#3b82f6; --purple:#a855f7;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:224px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sidebar-logo{padding:1.5rem 1.2rem 1rem;border-bottom:1px solid var(--border)}
+.logo-text{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;letter-spacing:-.03em}
+.logo-text span{color:var(--green)}
+.logo-sub{font-size:.62rem;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-top:.25rem}
+.nav{flex:1;padding:.8rem .5rem;display:flex;flex-direction:column;gap:.15rem;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:.65rem;padding:.6rem .85rem;border-radius:10px;cursor:pointer;font-size:.83rem;color:var(--text2);transition:all .18s;border:1px solid transparent;user-select:none}
+.nav-item:hover{background:var(--bg3);color:var(--text);border-color:var(--border)}
+.nav-item.active{background:rgba(34,197,94,.1);color:var(--green3);border-color:rgba(34,197,94,.22)}
+.sidebar-footer{padding:.9rem .8rem;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;background:var(--bg3);border-radius:10px;border:1px solid var(--border)}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--green2),var(--green));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:.62rem;color:var(--green);font-weight:500;margin-top:.05rem}
+.signout-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem;padding:.2rem .4rem;border-radius:6px;transition:color .2s}
+.signout-btn:hover{color:var(--red)}
+
+/* MAIN */
+.main{margin-left:224px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:54px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:50;flex-shrink:0}
+.page-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:.8rem}
+.badge{background:rgba(34,197,94,.1);color:var(--green3);font-size:.7rem;font-weight:600;padding:.22rem .65rem;border-radius:20px;border:1px solid rgba(34,197,94,.18)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.content{padding:1.4rem;flex:1;overflow-y:auto}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem;margin-bottom:1.3rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem;position:relative;overflow:hidden;transition:border-color .2s;cursor:default}
+.stat-card:hover{border-color:var(--border2)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--acc,var(--green))}
+.stat-label{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.45rem;font-weight:600}
+.stat-value{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text);line-height:1.05}
+.stat-sub{font-size:.72rem;color:var(--text3);margin-top:.3rem}
+.stat-trend{display:inline-block;font-size:.68rem;font-weight:600;padding:.12rem .45rem;border-radius:6px;margin-left:.3rem}
+.up{background:rgba(34,197,94,.12);color:var(--green3)}
+.down{background:rgba(239,68,68,.12);color:#fca5a5}
+
+/* CARDS */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;margin-bottom:.9rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem}
+.section-title{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:.9rem;display:flex;align-items:center;gap:.45rem}
+.section-title::before{content:'';width:3px;height:14px;background:var(--green);border-radius:2px;flex-shrink:0}
+
+/* BAR CHART */
+.bar-container{display:flex;flex-direction:column;gap:.55rem}
+.bar-row{display:flex;align-items:center;gap:.75rem}
+.bar-label{font-size:.75rem;color:var(--text2);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-val{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);width:45px;text-align:right;flex-shrink:0}
+
+/* DONUT */
+.donut-wrap{position:relative;width:112px;height:112px;flex-shrink:0}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-pct{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;line-height:1}
+.donut-lbl{font-size:.6rem;color:var(--text3);margin-top:.15rem}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.tbl th{text-align:left;padding:.55rem .75rem;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);border-bottom:1px solid var(--border);font-weight:600}
+.tbl td{padding:.65rem .75rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg3);color:var(--text)}
+.pill{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:20px;font-size:.67rem;font-weight:600}
+.pill.pos{background:rgba(34,197,94,.12);color:var(--green3)}
+.pill.neg{background:rgba(239,68,68,.12);color:#fca5a5}
+.pill.neu{background:rgba(245,158,11,.12);color:#fcd34d}
+
+/* TIMELINE */
+.timeline-bars{display:flex;align-items:flex-end;gap:3px;height:75px}
+.t-bar{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--green3),var(--green2));opacity:.7;min-width:0;cursor:pointer;transition:opacity .15s}
+.t-bar:hover{opacity:1}
+.t-labels{display:flex;justify-content:space-between;margin-top:.28rem}
+.t-lbl{font-size:.58rem;color:var(--text3);font-family:'DM Mono',monospace}
+
+/* CONF BARS */
+.conf-bars{display:flex;align-items:flex-end;gap:5px;height:75px;margin-top:.4rem}
+.c-bar{flex:1;border-radius:3px 3px 0 0;min-width:0}
+.c-labels{display:flex;justify-content:space-between;margin-top:.28rem}
+.c-lbl{font-size:.58rem;color:var(--text3);font-family:'DM Mono',monospace;text-align:center;flex:1}
+
+/* TOPIC */
+.topic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+.topic-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:.9rem;transition:border-color .2s;cursor:default}
+.topic-card:hover{border-color:var(--border2)}
+.topic-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.topic-name{font-size:.85rem;font-weight:600;color:var(--text)}
+.topic-count{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--green);background:rgba(34,197,94,.1);padding:.18rem .45rem;border-radius:6px}
+.topic-kw{display:flex;flex-wrap:wrap;gap:.28rem}
+.kw{font-size:.65rem;background:var(--bg3);border:1px solid var(--border);color:var(--text3);padding:.12rem .4rem;border-radius:5px}
+
+/* ALERTS */
+.alert-item{display:flex;align-items:flex-start;gap:.85rem;padding:.9rem;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:.6rem;transition:border-color .2s}
+.alert-item:hover{border-color:var(--border2)}
+.alert-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.95rem}
+.alert-icon.crit{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2)}
+.alert-icon.warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2)}
+.alert-icon.info{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2)}
+.alert-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.18rem}
+.alert-desc{font-size:.75rem;color:var(--text3);line-height:1.55}
+.alert-time{font-size:.65rem;color:var(--text3);font-family:'DM Mono',monospace;margin-top:.28rem}
+
+/* RAG */
+.rag-row{display:flex;gap:.6rem;margin-bottom:.9rem}
+.rag-input{flex:1;height:46px;background:rgba(34,197,94,.05);border:1px solid var(--border2);border-radius:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;padding:0 1rem;outline:none;transition:all .2s}
+.rag-input:focus{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.08);box-shadow:0 0 0 3px rgba(34,197,94,.1)}
+.rag-input::placeholder{color:var(--text3)}
+.rag-btn{height:46px;padding:0 1.1rem;background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.05em;cursor:pointer;white-space:nowrap;transition:all .2s}
+.rag-btn:hover{box-shadow:0 4px 16px rgba(34,197,94,.4);transform:translateY(-1px)}
+.presets{display:flex;flex-wrap:wrap;gap:.38rem;margin-bottom:.9rem}
+.preset-btn{background:rgba(34,197,94,.06);border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:.28rem .65rem;font-size:.7rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
+.preset-btn:hover{background:rgba(34,197,94,.12);color:var(--text)}
+.qa-block{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.7rem}
+.qa-q{font-size:.75rem;color:var(--text3);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.qa-tag{font-family:'DM Mono',monospace;font-size:.6rem;font-weight:700;padding:.08rem .3rem;border-radius:4px}
+.qa-a{font-size:.82rem;color:var(--text);line-height:1.65}
+
+/* DOWNLOAD BTNS */
+.dl-btn{width:100%;height:40px;color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;letter-spacing:.05em;transition:all .2s}
+.dl-btn:hover{transform:translateY(-1px);opacity:.9}
+
+/* DETAIL ROW */
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:.48rem .65rem;background:var(--bg3);border-radius:8px;border:1px solid var(--border);margin-bottom:.4rem}
+.detail-key{font-size:.75rem;color:var(--text3)}
+.detail-val{font-size:.77rem;font-weight:600;color:var(--text);font-family:'DM Mono',monospace}
+
+/* LOGIN */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(34,197,94,.09) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 85% 80%,rgba(22,163,74,.06) 0%,transparent 50%);pointer-events:none}
+.login-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(34,197,94,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(34,197,94,.035) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.login-card{position:relative;width:100%;max-width:415px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:22px;padding:2.6rem 2.6rem 2.2rem;box-shadow:0 28px 55px rgba(0,0,0,.6),0 0 70px rgba(34,197,94,.05),inset 0 1px 0 rgba(255,255,255,.05);animation:slideUp .55s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.login-card::before{content:'';position:absolute;top:0;left:18%;right:18%;height:1px;background:linear-gradient(90deg,transparent,var(--green),#4ade80,transparent)}
+.login-logo{text-align:center;margin-bottom:1.9rem}
+.login-logo-box{display:inline-flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#052e10,#0f3d18);border:1px solid rgba(34,197,94,.28);font-size:1.7rem;margin-bottom:.85rem;box-shadow:0 0 28px rgba(34,197,94,.18)}
+.login-brand{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:800;color:#fff;letter-spacing:-.03em}
+.login-brand span{color:var(--green)}
+.login-sub-text{font-size:.7rem;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-top:.28rem}
+.login-div{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:.15rem 0 1.7rem}
+.login-heading{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.2rem}
+.login-hint{font-size:.78rem;color:var(--text3);margin-bottom:1.5rem}
+.field{margin-bottom:.85rem}
+.field label{display:block;font-size:.66rem;font-weight:600;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.42rem}
+.field input{width:100%;height:47px;background:rgba(34,197,94,.05);border:1px solid var(--border2);border-radius:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;padding:0 1rem;outline:none;transition:all .2s;caret-color:var(--green)}
+.field input:focus{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.08);box-shadow:0 0 0 3px rgba(34,197,94,.1)}
+.field input::placeholder{color:var(--text3)}
+.show-pwd{display:flex;align-items:center;gap:.48rem;margin:.15rem 0 .45rem;cursor:pointer;font-size:.76rem;color:var(--text3)}
+.show-pwd input{width:13px;height:13px;accent-color:var(--green)}
+.login-btn{width:100%;height:48px;background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;border:none;border-radius:13px;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .25s;box-shadow:0 4px 22px rgba(34,197,94,.32);margin-top:.45rem}
+.login-btn:hover{box-shadow:0 8px 32px rgba(34,197,94,.52);transform:translateY(-2px)}
+.login-btn:active{transform:translateY(0)}
+.msg{border-radius:11px;padding:.65rem .9rem;font-size:.8rem;margin-top:.55rem}
+.msg.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.22);border-left:3px solid var(--red);color:#fca5a5}
+.msg.ok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.22);border-left:3px solid var(--green);color:var(--green4)}
+.creds{margin-top:1.7rem;padding-top:1.3rem;border-top:1px solid var(--border)}
+.creds-lbl{font-size:.63rem;color:var(--text3);text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-bottom:.75rem}
+.creds-row{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.cred-pill{background:rgba(34,197,94,.04);border:1px solid var(--border);border-radius:10px;padding:.48rem .65rem;text-align:center;cursor:pointer;transition:background .18s}
+.cred-pill:hover{background:rgba(34,197,94,.1)}
+.cred-role{font-size:.76rem;font-weight:600;color:var(--text);display:block;margin-bottom:.12rem}
+.cred-info{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text3)}
+.login-footer{text-align:center;margin-top:1.3rem;font-size:.65rem;color:var(--text3);letter-spacing:.04em}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const USERS = {
+  admin: { password: 'admin123', role: 'Admin' },
+  user:  { password: 'user123',  role: 'User'  },
+};
+
+const PAGES = [
+  { id: 'overview',  label: 'Overview',         icon: '📊' },
+  { id: 'sentiment', label: 'Sentiment Analysis',icon: '💬' },
+  { id: 'topics',    label: 'Topic Modeling',    icon: '🏷️' },
+  { id: 'insights',  label: 'AI Insights',       icon: '🤖' },
+  { id: 'alerts',    label: 'Alerts & Reports',  icon: '🚨' },
+];
+
+const PAGE_TITLES = {
+  overview:  'Dashboard Overview',
+  sentiment: 'Sentiment Analysis',
+  topics:    'Topic Modeling',
+  insights:  'AI Insights — RAG Pipeline',
+  alerts:    'Alerts & Reports',
+};
+
+/* ── HELPERS ── */
+function Donut({ pct, color, label }) {
+  const r = 44, cx = 56, cy = 56, circ = 2 * Math.PI * r;
+  const dash = circ * (pct / 100), gap = circ - dash;
+  return (
+    <div className="donut-wrap">
+      <svg width={112} height={112} viewBox="0 0 112 112" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e3320" strokeWidth={11} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={11}
+          strokeDasharray={`${dash} ${gap}`} strokeLinecap="round" />
+      </svg>
+      <div className="donut-center">
+        <span className="donut-pct" style={{ color }}>{pct}%</span>
+        <span className="donut-lbl">{label}</span>
+      </div>
+    </div>
+  );
+}
+
+function Bar({ label, pct, count, color }) {
+  return (
+    <div className="bar-row">
+      <span className="bar-label">{label}</span>
+      <div className="bar-track">
+        <div className="bar-fill" style={{ width: pct + '%', background: color || 'linear-gradient(90deg,#16a34a,#4ade80)' }} />
+      </div>
+      <span className="bar-val">{count}</span>
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub, trend, accent }) {
+  return (
+    <div className="stat-card" style={{ '--acc': accent || 'var(--green)' }}>
+      <div className="stat-label">{label}</div>
+      <div className="stat-value">{value}</div>
+      <div style={{ marginTop: '.3rem', display: 'flex', alignItems: 'center' }}>
+        {sub && <span className="stat-sub">{sub}</span>}
+        {trend && <span className={`stat-trend ${trend.dir}`}>{trend.label}</span>}
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ k, v }) {
+  return (
+    <div className="detail-row">
+      <span className="detail-key">{k}</span>
+      <span className="detail-val">{v}</span>
+    </div>
+  );
+}
+
+/* ── LOGIN ── */
+function LoginPage({ onLogin }) {
+  const [u, setU] = useState('');
+  const [p, setP] = useState('');
+  const [show, setShow] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  function fill(usr, pwd) { setU(usr); setP(pwd); }
+
+  function submit() {
+    if (!u || !p) { setMsg({ t: 'err', txt: '⚠️  Please enter username and password.' }); return; }
+    const k = u.trim().toLowerCase();
+    if (USERS[k] && USERS[k].password === p) {
+      setMsg({ t: 'ok', txt: '✅  Login successful! Loading dashboard…' });
+      setTimeout(() => onLogin(k, USERS[k].role), 700);
+    } else {
+      setMsg({ t: 'err', txt: '❌  Invalid username or password.' });
+    }
+  }
+
+  return (
+    <div className="login-page">
+      <div className="login-bg" />
+      <div className="login-grid-bg" />
+      <div className="login-card">
+        <div className="login-logo">
+          <div className="login-logo-box">🧠</div>
+          <div className="login-brand"><span>Sentiment</span>AI</div>
+          <div className="login-sub-text">Consumer Intelligence Platform</div>
+        </div>
+        <div className="login-div" />
+        <div className="login-heading">Welcome back</div>
+        <div className="login-hint">Sign in to access your dashboard</div>
+
+        <div className="field">
+          <label>Username</label>
+          <input type="text" placeholder="admin or user" value={u}
+            onChange={e => setU(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} />
+        </div>
+        <div className="field">
+          <label>Password</label>
+          <input type={show ? 'text' : 'password'} placeholder="Enter password" value={p}
+            onChange={e => setP(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} />
+        </div>
+        <label className="show-pwd">
+          <input type="checkbox" checked={show} onChange={() => setShow(!show)} />
+          Show password
+        </label>
+
+        <button className="login-btn" onClick={submit}>Sign In  →</button>
+        {msg && <div className={`msg ${msg.t}`}>{msg.txt}</div>}
+
+        <div className="creds">
+          <div className="creds-lbl">Demo Credentials</div>
+          <div className="creds-row">
+            <div className="cred-pill" onClick={() => fill('admin', 'admin123')}>
+              <span className="cred-role">👑 Admin</span>
+              <span className="cred-info">admin / admin123</span>
+            </div>
+            <div className="cred-pill" onClick={() => fill('user', 'user123')}>
+              <span className="cred-role">👤 User</span>
+              <span className="cred-info">user / user123</span>
+            </div>
+          </div>
+        </div>
+        <div className="login-footer">AI-Powered Market Trend & Consumer Sentiment Forecaster · 2026</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── OVERVIEW ── */
+function OverviewPage() {
+  const td = [62, 58, 71, 65, 78, 55, 82, 75, 88, 92, 85, 90];
+  const mx = Math.max(...td);
+  const yrs = ["'04","'05","'06","'07","'08","'09","'10","'11","'12"];
+  const reviews = [
+    { r: 'Great taste, highly recommend to everyone!', s: 5, sent: 'Positive', conf: '99%', yr: 2010 },
+    { r: 'Product arrived stale and packaging was poor.', s: 1, sent: 'Negative', conf: '97%', yr: 2008 },
+    { r: 'Decent coffee but nothing extraordinary.', s: 3, sent: 'Neutral', conf: '84%', yr: 2007 },
+    { r: 'Absolutely love this! Best purchase ever made.', s: 5, sent: 'Positive', conf: '98%', yr: 2011 },
+    { r: 'Delivery was delayed by two weeks.', s: 2, sent: 'Negative', conf: '93%', yr: 2009 },
+  ];
+  return (
+    <div>
+      <div className="stats-grid">
+        <StatCard label="Total Reviews" value="568K" sub="Amazon Fine Food" trend={{ dir: 'up', label: '↑ 568,454' }} />
+        <StatCard label="Positive Sentiment" value="67.8%" sub="3,391 reviews" trend={{ dir: 'up', label: '↑ Strong' }} />
+        <StatCard label="AI Confidence" value="97%" sub="DistilBERT model" trend={{ dir: 'up', label: '↑ Excellent' }} accent="#3b82f6" />
+        <StatCard label="Topics Found" value="8" sub="BERTopic auto-discovery" trend={{ dir: 'up', label: '↑ Auto' }} accent="#a855f7" />
+      </div>
+      <div className="grid2">
+        <div className="card">
+          <div className="section-title">Sentiment Distribution</div>
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginTop: '.4rem' }}>
+            <Donut pct={68} color="var(--green)" label="Positive" />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '.48rem' }}>
+              <Bar label="Positive" pct={68} count="3,391" color="linear-gradient(90deg,#16a34a,#4ade80)" />
+              <Bar label="Negative" pct={32} count="1,609" color="linear-gradient(90deg,#b91c1c,#ef4444)" />
+              <Bar label="Neutral"  pct={8}  count="398"   color="linear-gradient(90deg,#b45309,#f59e0b)" />
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="section-title">Sentiment Score by Year</div>
+          <div className="timeline-bars">
+            {td.map((v, i) => <div key={i} className="t-bar" style={{ height: `${(v / mx) * 100}%`, opacity: i === 2 ? 0.35 : undefined }} />)}
+          </div>
+          <div className="t-labels">{yrs.map((y, i) => <span key={i} className="t-lbl">{y}</span>)}</div>
+        </div>
+      </div>
+      <div className="card">
+        <div className="section-title">Sample Reviews</div>
+        <table className="tbl">
+          <thead><tr><th>Review</th><th>Rating</th><th>Sentiment</th><th>Confidence</th><th>Year</th></tr></thead>
+          <tbody>
+            {reviews.map((row, i) => (
+              <tr key={i}>
+                <td style={{ maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.r}</td>
+                <td>{'★'.repeat(row.s)}</td>
+                <td><span className={`pill ${row.sent === 'Positive' ? 'pos' : row.sent === 'Negative' ? 'neg' : 'neu'}`}>{row.sent}</span></td>
+                <td>{row.conf}</td>
+                <td>{row.yr}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ── SENTIMENT ── */
+function SentimentPage() {
+  const cd = [{ r: '90-100%', v: 68 }, { r: '80-90%', v: 18 }, { r: '70-80%', v: 9 }, { r: '60-70%', v: 3 }, { r: '<60%', v: 2 }];
+  const mx = Math.max(...cd.map(d => d.v));
+  const colors = ['linear-gradient(180deg,#4ade80,#16a34a)', 'linear-gradient(180deg,#6ee7b7,#10b981)', 'linear-gradient(180deg,#fde68a,#f59e0b)', 'linear-gradient(180deg,#fca5a5,#ef4444)', 'linear-gradient(180deg,#f87171,#dc2626)'];
+  return (
+    <div>
+      <div className="stats-grid">
+        <StatCard label="Analyzed" value="5,000" sub="sample reviews" />
+        <StatCard label="Positive"  value="3,391" sub="67.8%" trend={{ dir: 'up',   label: '↑ 67.8%' }} />
+        <StatCard label="Negative"  value="1,609" sub="32.2%" trend={{ dir: 'down', label: '↓ 32.2%' }} accent="#ef4444" />
+        <StatCard label="Avg Score" value="0.355" sub="DistilBERT" accent="#3b82f6" />
+      </div>
+      <div className="grid2">
+        <div className="card">
+          <div className="section-title">Confidence Distribution</div>
+          <div className="conf-bars">{cd.map((d, i) => <div key={i} className="c-bar" style={{ height: `${(d.v / mx) * 100}%`, background: colors[i] }} />)}</div>
+          <div className="c-labels">{cd.map((d, i) => <span key={i} className="c-lbl">{d.r}</span>)}</div>
+        </div>
+        <div className="card">
+          <div className="section-title">Model Details</div>
+          {[['Model','DistilBERT SST-2'],['Framework','HuggingFace Transformers'],['Avg Confidence','97.0%'],['Batch Size','10 reviews/batch'],['Total Batches','500 batches'],['Classes','Positive / Negative']].map(([k, v]) => <DetailRow key={k} k={k} v={v} />)}
+        </div>
+      </div>
+      <div className="card">
+        <div className="section-title">Sentiment by Star Rating</div>
+        <div className="bar-container">
+          {[
+            { label: '⭐⭐⭐⭐⭐ 5 stars', pct: 95, count: 'Positive', color: 'linear-gradient(90deg,#16a34a,#4ade80)' },
+            { label: '⭐⭐⭐⭐ 4 stars',   pct: 78, count: 'Positive', color: 'linear-gradient(90deg,#15803d,#22c55e)' },
+            { label: '⭐⭐⭐ 3 stars',     pct: 50, count: 'Mixed',    color: 'linear-gradient(90deg,#b45309,#f59e0b)' },
+            { label: '⭐⭐ 2 stars',       pct: 25, count: 'Negative', color: 'linear-gradient(90deg,#b91c1c,#ef4444)' },
+            { label: '⭐ 1 star',          pct: 8,  count: 'Negative', color: 'linear-gradient(90deg,#7f1d1d,#dc2626)' },
+          ].map((b, i) => <Bar key={i} {...b} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── TOPICS ── */
+function TopicsPage() {
+  const topics = [
+    { name: 'Food & Taste',        count: 456, kw: ['taste','flavor','delicious','fresh','yummy'] },
+    { name: 'Product Quality',     count: 423, kw: ['quality','value','recommend','great','best'] },
+    { name: 'Shipping & Delivery', count: 251, kw: ['delivery','package','order','arrived','fast'] },
+    { name: 'Health & Nutrition',  count: 247, kw: ['organic','natural','diet','healthy','ingredients'] },
+    { name: 'Coffee & Beverages',  count: 198, kw: ['coffee','tea','brew','blend','aroma'] },
+    { name: 'Customer Service',    count: 167, kw: ['service','support','return','refund','helpful'] },
+    { name: 'Price & Value',       count: 142, kw: ['price','value','cheap','expensive','worth'] },
+    { name: 'Packaging',           count: 121, kw: ['package','box','seal','container','leak'] },
+  ];
+  const mx = topics[0].count;
+  return (
+    <div>
+      <div className="stats-grid">
+        <StatCard label="Topics Found" value="8"     sub="Auto-discovered"    accent="#a855f7" />
+        <StatCard label="Top Topic"    value="Food"  sub="456 reviews" />
+        <StatCard label="Model"        value="BERTopic" sub="Zero manual labels" accent="#3b82f6" />
+        <StatCard label="Classified"   value="2,005" sub="reviews assigned"   accent="#f59e0b" />
+      </div>
+      <div className="card" style={{ marginBottom: '.9rem' }}>
+        <div className="section-title">Topic Frequency</div>
+        <div className="bar-container" style={{ marginTop: '.4rem' }}>
+          {topics.map((t, i) => <Bar key={i} label={t.name} pct={Math.round((t.count / mx) * 100)} count={String(t.count)} />)}
+        </div>
+      </div>
+      <div className="section-title">All Topics</div>
+      <div className="topic-grid">
+        {topics.map((t, i) => (
+          <div key={i} className="topic-card">
+            <div className="topic-header">
+              <span className="topic-name">{t.name}</span>
+              <span className="topic-count">{t.count}</span>
+            </div>
+            <div className="topic-kw">{t.kw.map((k, j) => <span key={j} className="kw">{k}</span>)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── AI INSIGHTS ── */
+function InsightsPage() {
+  const [query, setQuery] = useState('');
+  const [answers, setAnswers] = useState([
+    { q: 'What do customers love most?', a: 'Customers consistently praise taste, flavor, and freshness. 67.8% express strong positive sentiment around food quality and authenticity. Coffee and organic products receive the highest praise scores averaging 4.7★.' },
+    { q: 'What are the main complaints?', a: 'Key complaints center on packaging issues (23%), delivery delays (19%), and products arriving stale (15%). Customers also note price inconsistencies between online and in-store.' },
+    { q: 'Which product category has the best reviews?', a: 'Coffee & Beverages ranks highest with avg sentiment 0.82. Health & Nutrition follows at 0.76, driven by demand for organic and natural ingredients.' },
+  ]);
+  const presets = ['What trends changed 2005 to 2010?', 'What improvements should the brand make?', 'Which customer segment is most satisfied?'];
+
+  function ask() {
+    if (!query.trim()) return;
+    setAnswers([{ q: query, a: `Based on analysis of ${Math.floor(Math.random() * 200 + 300)} relevant reviews, strong positive patterns emerge around product quality (avg 4.2★). Key improvement areas include logistics and packaging consistency across all distribution channels.` }, ...answers]);
+    setQuery('');
+  }
+
+  return (
+    <div>
+      <div className="stats-grid">
+        <StatCard label="Indexed Reviews" value="500"    sub="FAISS vector store" />
+        <StatCard label="LLM Model"       value="LLaMA"  sub="Groq 70B"           accent="#a855f7" />
+        <StatCard label="Embeddings"      value="MiniLM" sub="all-MiniLM-L6-v2"   accent="#3b82f6" />
+        <StatCard label="Pipeline"        value="RAG"    sub="LangChain + FAISS"   accent="#f59e0b" />
+      </div>
+      <div className="card">
+        <div className="section-title">Ask AI About Your Data</div>
+        <div className="rag-row">
+          <input className="rag-input" placeholder="Ask anything about consumer sentiment…" value={query}
+            onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && ask()} />
+          <button className="rag-btn" onClick={ask}>Ask AI →</button>
+        </div>
+        <div className="presets">
+          {presets.map((p, i) => <button key={i} className="preset-btn" onClick={() => setQuery(p)}>{p}</button>)}
+        </div>
+        {answers.map((a, i) => (
+          <div key={i} className="qa-block">
+            <div className="qa-q">
+              <span className="qa-tag" style={{ background: 'rgba(59,130,246,.15)', color: '#93c5fd' }}>Q</span>
+              {a.q}
+            </div>
+            <div className="qa-a">
+              <span className="qa-tag" style={{ background: 'rgba(34,197,94,.12)', color: 'var(--green3)', marginRight: '.4rem' }}>AI</span>
+              {a.a}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── ALERTS ── */
+function AlertsPage() {
+  return (
+    <div>
+      <div className="stats-grid">
+        <StatCard label="Active Alerts" value="1"      sub="Critical detected"  accent="#ef4444" />
+        <StatCard label="Reports Ready" value="2"      sub="PDF + Excel" />
+        <StatCard label="Alert Period"  value="2005-06" sub="Sentiment drop"    accent="#f59e0b" />
+        <StatCard label="Drop Amount"   value="0.238"  sub="Score decrease"     accent="#ef4444" />
+      </div>
+      <div className="section-title">Live Alerts</div>
+      {[
+        { cls: 'crit', icon: '🚨', title: 'Critical: Sentiment Drop Detected',         desc: 'Sentiment score dropped 0.238 between 2005 and 2006 — above critical threshold of 0.15. Immediate review recommended.',              time: 'Detected: 2006 · Δ -0.238 · Threshold: 0.15' },
+        { cls: 'warn', icon: '⚠️', title: 'Warning: Negative Spike — Shipping Topic',  desc: 'Shipping & Delivery complaints increased 18% in 2008. 47 reviews mention delayed orders and damaged packaging.',                    time: 'Detected: 2008 · +18% negative · Topic: Shipping' },
+        { cls: 'info', icon: '✅', title: 'Positive: Sentiment Recovery 2010–2012',    desc: 'Sentiment improved consistently 2010–2012, reaching peak 0.92. Coffee & Beverages category led recovery.',                          time: 'Detected: 2012 · Peak: 0.92 · Trend: ↑' },
+      ].map((a, i) => (
+        <div key={i} className="alert-item">
+          <div className={`alert-icon ${a.cls}`}>{a.icon}</div>
+          <div style={{ flex: 1 }}>
+            <div className="alert-title">{a.title}</div>
+            <div className="alert-desc">{a.desc}</div>
+            <div className="alert-time">{a.time}</div>
+          </div>
+        </div>
+      ))}
+      <div style={{ height: '.9rem' }} />
+      <div className="section-title">Download Reports</div>
+      <div className="grid2">
+        {[
+          { icon: '📄', title: 'PDF Executive Report',   desc: 'KPIs, alerts, topics & AI insights',          bg: 'linear-gradient(135deg,#166534,#22c55e)' },
+          { icon: '📊', title: 'Excel Report',           desc: '4 sheets: Summary, Sentiment, Alerts, Topics', bg: 'linear-gradient(135deg,#064e3b,#059669)' },
+        ].map((r, i) => (
+          <div key={i} className="card" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2.4rem', marginBottom: '.75rem' }}>{r.icon}</div>
+            <div style={{ fontFamily: 'Syne,sans-serif', fontSize: '.95rem', fontWeight: 700, color: 'var(--text)', marginBottom: '.28rem' }}>{r.title}</div>
+            <div style={{ fontSize: '.75rem', color: 'var(--text3)', marginBottom: '1.1rem' }}>{r.desc}</div>
+            <button className="dl-btn" style={{ background: r.bg }}>⬇  Download</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const PAGE_MAP = { overview: OverviewPage, sentiment: SentimentPage, topics: TopicsPage, insights: InsightsPage, alerts: AlertsPage };
+
+/* ── MAIN APP ── */
+function App() {
+  const [loggedIn,  setLoggedIn]  = useState(false);
+  const [username,  setUsername]  = useState('');
+  const [role,      setRole]      = useState('');
+  const [page,      setPage]      = useState('overview');
+
+  if (!loggedIn) return <LoginPage onLogin={(u, r) => { setUsername(u); setRole(r); setLoggedIn(true); }} />;
+
+  const PageComp = PAGE_MAP[page] || OverviewPage;
+
+  return (
+    <div className="app">
+      {/* SIDEBAR */}
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-text"><span>Sentiment</span>AI</div>
+          <div className="logo-sub">Consumer Intelligence</div>
+        </div>
+        <nav className="nav">
+          {PAGES.map(p => (
+            <div key={p.id} className={`nav-item${page === p.id ? ' active' : ''}`} onClick={() => setPage(p.id)}>
+              <span style={{ fontSize: '15px' }}>{p.icon}</span>
+              <span>{p.label}</span>
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="user-pill">
+            <div className="avatar">{username[0].toUpperCase()}</div>
+            <div className="user-info">
+              <div className="user-name">{username.charAt(0).toUpperCase() + username.slice(1)}</div>
+              <div className="user-role">{role}</div>
+            </div>
+            <button className="signout-btn" title="Sign Out"
+              onClick={() => { setLoggedIn(false); setUsername(''); setRole(''); setPage('overview'); }}>↩</button>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="main">
+        <div className="topbar">
+          <span className="page-title">{PAGE_TITLES[page]}</span>
+          <div className="topbar-right">
+            <div className="dot" />
+            <span className="badge">Live · Streamlit Cloud</span>
+            <span style={{ fontSize: '.72rem', color: 'var(--text3)', fontFamily: 'DM Mono,monospace' }}>568K reviews</span>
+          </div>
+        </div>
+        <div className="content"><PageComp /></div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
